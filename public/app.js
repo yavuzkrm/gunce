@@ -685,10 +685,10 @@ function renderDay() {
     h('button', { type: 'button', class: 'btn btn-primary btn-block add-btn', onclick: () => openEditor(null, s) }, '＋ ', t('addEntry')),
     list.length
       ? h('div', { class: 'entries' }, list.map((e) => entryCard(e)))
-      : h('div', { class: 'empty' },
-        h('div', { class: 'empty-art', 'aria-hidden': 'true' }, '🌷'),
-        h('p', {}, h('strong', {}, t('emptyDay'))),
-        h('p', { class: 'muted' }, t('emptyDayHint'))),
+      : h('button', { type: 'button', class: 'empty', onclick: () => openEditor(null, s) },
+        h('span', { class: 'empty-art', 'aria-hidden': 'true' }, '🌷'),
+        h('span', {}, h('strong', {}, t('emptyDay'))),
+        h('span', { class: 'muted' }, t('emptyDayHint'))),
     memories);
 
   const token = ++memoriesToken;
