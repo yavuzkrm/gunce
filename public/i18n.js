@@ -116,7 +116,6 @@ export const STRINGS = {
     nextDay: 'Sonraki gün',
     hideDay: 'Gün panelini kapat',
     showDay: 'Gün panelini aç',
-    shortcutsHint: 'İpucu: ← → ay değiştir, N yeni anı, / ara, [ ] panelleri aç/kapa.',
     errors: {
       unauthorized: 'Oturumun sona erdi, tekrar giriş yap.',
       wrong_credentials: 'Kullanıcı adı ya da şifre hatalı.',
@@ -253,7 +252,6 @@ export const STRINGS = {
     nextDay: 'Next day',
     hideDay: 'Close day panel',
     showDay: 'Open day panel',
-    shortcutsHint: 'Tip: ← → change month, N new memory, / search, [ ] toggle panels.',
     errors: {
       unauthorized: 'Your session expired, please log in again.',
       wrong_credentials: 'Wrong username or password.',

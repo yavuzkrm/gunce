@@ -198,7 +198,9 @@ function modal({ title, body, footer, className = '', onClose }) {
   dlg.addEventListener('click', (e) => { if (downOnBackdrop && e.target === dlg) close(); });
   dlg.addEventListener('close', () => { dlg.remove(); onClose?.(); });
   document.body.append(dlg);
+  dlg.tabIndex = -1;
   dlg.showModal();
+  dlg.focus();
   return { dlg, close };
 }
 
@@ -503,8 +505,7 @@ function renderSidebar() {
     h('div', { class: 'side-foot' },
       h('button', { type: 'button', class: 'me', title: t('profile'), onclick: openProfile },
         h('span', { class: 'me-avatar' }, u.avatar),
-        h('span', { class: 'me-text' }, h('strong', {}, u.displayName), h('small', {}, '@' + u.username))),
-      h('p', { class: 'hint' }, t('shortcutsHint'))));
+        h('span', { class: 'me-text' }, h('strong', {}, u.displayName), h('small', {}, '@' + u.username)))));
 
   renderSideToggle();
   const top = $('#topbar-avatar');
@@ -686,21 +687,26 @@ function entryCard(e, { compact = false } = {}) {
 
 function openEntryDetail(e) {
   const j = journalById(e.journalId);
-  const by = e.author ? `${e.author.avatar} ${e.author.displayName}` : t('deletedUser');
+  const [y, m, d] = parse(e.date);
   const { close } = modal({
-    title: `${formatLong(e.date)}${e.time ? ' · ' + e.time : ''}`,
+    title: j ? `${j.emoji} ${journalName(j)}` : '📔',
     className: `modal-entry c-${j?.color || 'peach'}`,
     body: h('article', { class: 'entry-detail' },
-      h('div', { class: 'detail-head' },
-        h('span', { class: 'entry-mood' }, e.mood || j?.emoji || '📔'),
-        h('div', { class: 'detail-titles' },
-          e.title ? h('h3', {}, e.title) : null,
-          e.place ? h('span', { class: 'entry-place' }, '📍 ', e.place) : null)),
-      e.body ? h('p', { class: 'detail-body' }, e.body) : null,
-      h('footer', { class: 'entry-foot' },
-        h('span', {}, by),
-        e.editedBy ? h('span', { class: 'muted' }, '· ', t('editedBy', e.editedBy)) : null,
-        j ? h('span', { class: `tag c-${j.color}` }, j.emoji, ' ', journalName(j)) : null)),
+      h('header', { class: 'detail-hero' },
+        h('span', { class: 'detail-day' }, d),
+        h('span', { class: 'detail-when' },
+          h('strong', {}, weekdayName(weekdayOf(y, m, d))),
+          h('span', {}, `${d} ${monthName(m)} ${y}`),
+          e.time ? h('span', { class: 'detail-time' }, '🕘 ', e.time) : null),
+        h('span', { class: 'detail-mood', title: t('mood') }, e.mood || j?.emoji || '📔')),
+      e.title ? h('h3', { class: 'detail-title' }, e.title) : null,
+      e.place ? h('span', { class: 'detail-place' }, '📍 ', e.place) : null,
+      e.body ? h('div', { class: 'detail-paper' }, h('p', { class: 'detail-body' }, e.body)) : null,
+      h('footer', { class: 'detail-meta' },
+        h('span', { class: 'detail-author' },
+          h('span', { class: 'face big' }, e.author ? e.author.avatar : '👤'),
+          h('span', {}, h('strong', {}, e.author ? e.author.displayName : t('deletedUser')),
+            e.editedBy ? h('small', {}, t('editedBy', e.editedBy)) : null)))),
     footer: [
       h('button', { type: 'button', class: 'btn btn-danger-soft', onclick: () => { close(); deleteEntry(e); } }, '🗑️ ', t('delete')),
       h('span', { class: 'spacer' }),
