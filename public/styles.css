@@ -354,8 +354,8 @@ body.day-hidden .day-reopen { display: inline-grid; }
 
 /* ---------- day panel ---------- */
 
-.day-tools { display: flex; align-items: center; gap: 6px; margin: -8px -6px -4px -4px; }
-.day-nav { margin-right: auto; background: var(--surface-2); box-shadow: none; }
+.day-tools { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin: -8px -6px -10px 0; }
+.day-nav { flex: none; background: var(--surface-2); box-shadow: none; }
 .day-wide-btn { color: var(--ink-soft); }
 .day-head { display: flex; align-items: center; gap: 12px; }
 body.day-wide .day { padding: 24px clamp(22px, 3vw, 44px) 40px; }
@@ -364,17 +364,18 @@ body.day-wide .entry { padding: 20px 20px 14px; }
 body.day-wide .entry-headline h3 { font-size: 20px; }
 body.day-wide .entry-body { font-size: 16px; }
 body.day-wide .day-num { width: 84px; height: 84px; font-size: 54px; }
+body.day-wide .day-meta { width: 9.2em; }
 body.day-wide .day-meta strong { font-size: 24px; }
 body.day-wide .day > * { width: 100%; max-width: 900px; margin-inline: auto; }
-body.day-wide .day-date { flex: none; }
 body.day-wide .add-btn { width: auto; align-self: flex-start; margin-left: max(0px, calc((100% - 900px) / 2)); padding: 12px 28px; }
-.day-date { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.day-date { display: flex; align-items: center; gap: 12px; flex: none; min-width: 0; }
 .day-num {
   font-family: var(--font-display); font-weight: 600; font-size: 46px; line-height: 1;
   width: 72px; height: 72px; border-radius: 22px; display: grid; place-items: center; flex: none;
   background: var(--primary-soft); transform: rotate(-3deg);
 }
-.day-meta { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.day-meta { display: flex; flex-direction: column; width: 7.6em; min-width: 0; line-height: 1.25; white-space: nowrap; }
+.day-meta > * { overflow: hidden; text-overflow: ellipsis; }
 .day-meta strong { font-family: var(--font-display); font-size: 20px; font-weight: 600; }
 .day-meta span { color: var(--ink-soft); font-weight: 700; }
 .add-btn { padding: 11px; }

@@ -677,11 +677,7 @@ function renderDay() {
 
   const wide = panelFlag('day-wide');
   day.replaceChildren(
-    // Fixed toolbar: day arrows on the left, size/close on the right, whatever the date says.
     h('div', { class: 'day-tools' },
-      h('div', { class: 'seg day-nav' },
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('prevDay'), title: t('prevDay'), onclick: () => selectDate(addDays(s, -1), { open: false }) }, '‹'),
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('nextDay'), title: t('nextDay'), onclick: () => selectDate(addDays(s, 1), { open: false }) }, '›')),
       h('button', { type: 'button', class: 'btn btn-ghost small day-wide-btn', onclick: toggleWideDay, 'aria-pressed': String(wide) },
         wide ? '⤡ ' : '⤢ ', wide ? t('shrinkDay') : t('expandDay')),
       h('button', { type: 'button', class: 'icon-btn small sheet-close', 'aria-label': t('hideDay'), title: t('hideDay'), onclick: closeDaySheet }, '✕')),
@@ -690,7 +686,11 @@ function renderDay() {
         h('span', { class: 'day-num' }, d),
         h('span', { class: 'day-meta' },
           h('strong', {}, weekdayName(weekdayOf(y, m, d))),
-          h('span', {}, `${cap(monthName(m))} ${y}`)))),
+          h('span', {}, `${cap(monthName(m))} ${y}`))),
+      // The weekday block has a fixed width, so the arrows stay put whatever the day is called.
+      h('div', { class: 'seg day-nav' },
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('prevDay'), title: t('prevDay'), onclick: () => selectDate(addDays(s, -1), { open: false }) }, '‹'),
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('nextDay'), title: t('nextDay'), onclick: () => selectDate(addDays(s, 1), { open: false }) }, '›'))),
     h('button', { type: 'button', class: 'btn btn-primary btn-block add-btn', onclick: () => openEditor(null, s) }, '＋ ', t('addEntry')),
     list.length
       ? h('div', { class: 'entries' }, list.map((e) => entryCard(e)))
