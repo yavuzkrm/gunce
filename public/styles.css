@@ -344,10 +344,10 @@ body.day-hidden .day-reopen { display: inline-grid; }
 
 /* ---------- day panel ---------- */
 
-.day-tools { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin: -8px -6px -6px 0; }
+.day-tools { display: flex; align-items: center; gap: 6px; margin: -8px -6px -4px -4px; }
+.day-nav { margin-right: auto; background: var(--surface-2); box-shadow: none; }
 .day-wide-btn { color: var(--ink-soft); }
 .day-head { display: flex; align-items: center; gap: 12px; }
-.day-head .seg { margin-left: auto; }
 body.day-wide .day { padding: 24px clamp(22px, 3vw, 44px) 40px; }
 body.day-wide .entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); align-items: start; gap: 26px 18px; }
 body.day-wide .entry { padding: 20px 20px 14px; }
@@ -356,8 +356,6 @@ body.day-wide .entry-body { font-size: 16px; }
 body.day-wide .day-num { width: 84px; height: 84px; font-size: 54px; }
 body.day-wide .day-meta strong { font-size: 24px; }
 body.day-wide .day > * { width: 100%; max-width: 900px; margin-inline: auto; }
-body.day-wide .day-tools { margin-bottom: -6px; }
-body.day-wide .day-head .seg { margin-left: 8px; }
 body.day-wide .day-date { flex: none; }
 body.day-wide .add-btn { width: auto; align-self: flex-start; margin-left: max(0px, calc((100% - 900px) / 2)); padding: 12px 28px; }
 .day-date { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
@@ -370,7 +368,6 @@ body.day-wide .add-btn { width: auto; align-self: flex-start; margin-left: max(0
 .day-meta strong { font-family: var(--font-display); font-size: 20px; font-weight: 600; }
 .day-meta span { color: var(--ink-soft); font-weight: 700; }
 .add-btn { padding: 11px; }
-.day-head .seg { background: var(--surface-2); box-shadow: none; }
 
 .entries { display: flex; flex-direction: column; gap: 22px; padding-top: 8px; }
 .entry {
