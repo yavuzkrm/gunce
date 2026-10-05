@@ -455,10 +455,10 @@ function createApp(db, { secureCookies = false, authRateLimit = 30 } = {}) {
     const f = {
       date: b.date !== undefined ? b.date : current.date,
       time: pick('time', 5),
-      title: pick('title', 120),
+      title: pick('title', 60),
       body: pick('body', 20000),
       mood: pick('mood', 16),
-      place: pick('place', 120),
+      place: pick('place', 80),
     };
     if (!validDate(f.date)) fail(400, 'invalid_date');
     if (f.time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(f.time)) fail(400, 'invalid_time');

@@ -30,7 +30,6 @@ const state = {
   selected: '',
   entries: [],
   range: null,
-  stats: null,
   lang: store.get('gunce-lang') || ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'tr'),
 };
 
@@ -312,12 +311,8 @@ async function loadMonth() {
   const from = start < '0001-01-01' ? '0001-01-01' : start;
   const to = end > '9999-12-31' || end.length > 10 ? '9999-12-31' : end;
   const key = `${viewParam()}|${from}|${to}`;
-  const [{ entries }, stats] = await Promise.all([
-    api('GET', `/api/entries?journal=${viewParam()}&from=${from}&to=${to}`),
-    api('GET', `/api/stats?journal=${viewParam()}`),
-  ]);
+  const { entries } = await api('GET', `/api/entries?journal=${viewParam()}&from=${from}&to=${to}`);
   state.entries = entries;
-  state.stats = stats;
   state.range = key;
 }
 
@@ -532,9 +527,6 @@ function renderCalendar() {
   const { start, cells } = gridRange(y, m);
   const byDate = entriesByDate();
   const today = todayStr();
-  const monthPrefix = ymd(y, m, 1).slice(0, 7);
-  const monthEntries = state.entries.filter((e) => e.date.startsWith(monthPrefix));
-  const monthDays = new Set(monthEntries.map((e) => e.date)).size;
   const view = state.view === 'all' ? null : journalById(state.view);
   document.title = `${cap(monthName(m))} ${y} · Günce`;
 
@@ -565,7 +557,6 @@ function renderCalendar() {
       list.length ? h('span', { class: 'cell-dots', 'aria-hidden': 'true' }, list.slice(0, 4).map((e) => h('i', { class: `dot c-${journalById(e.journalId)?.color || 'peach'}` }))) : null));
   }
 
-  const stats = state.stats;
   cal.replaceChildren(
     h('div', { class: 'cal-head' },
       h('div', { class: 'cal-title-wrap' },
@@ -579,9 +570,6 @@ function renderCalendar() {
           h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('prev'), title: t('prev'), onclick: () => goToMonth(y, m - 1), disabled: y === MIN_YEAR && m === 1 }, '‹'),
           h('button', { type: 'button', class: 'btn btn-soft', onclick: () => selectDate(todayStr(), { open: false }) }, t('today')),
           h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('next'), title: t('next'), onclick: () => goToMonth(y, m + 1), disabled: y === MAX_YEAR && m === 12 }, '›')))),
-    h('p', { class: 'cal-summary' },
-      t('monthSummary', monthEntries.length, monthDays),
-      stats && stats.entries ? h('span', { class: 'muted total' }, h('span', { class: 'sep' }, ' · '), t('totalSummary', stats.entries, formatShort(stats.first))) : null),
     h('div', { class: 'weekdays', 'aria-hidden': 'true' }, [0, 1, 2, 3, 4, 5, 6].map((i) => h('span', { class: i >= 5 ? 'weekend' : '' }, weekdayName(i, 'short')))),
     grid);
   fitChips();
@@ -687,26 +675,26 @@ function entryCard(e, { compact = false } = {}) {
 
 function openEntryDetail(e) {
   const j = journalById(e.journalId);
-  const [y, m, d] = parse(e.date);
   const { close } = modal({
     title: j ? `${j.emoji} ${journalName(j)}` : '📔',
     className: `modal-entry c-${j?.color || 'peach'}`,
     body: h('article', { class: 'entry-detail' },
-      h('header', { class: 'detail-hero' },
-        h('span', { class: 'detail-day' }, d),
-        h('span', { class: 'detail-when' },
-          h('strong', {}, weekdayName(weekdayOf(y, m, d))),
-          h('span', {}, `${d} ${monthName(m)} ${y}`),
-          e.time ? h('span', { class: 'detail-time' }, '🕘 ', e.time) : null),
-        h('span', { class: 'detail-mood', title: t('mood') }, e.mood || j?.emoji || '📔')),
-      e.title ? h('h3', { class: 'detail-title' }, e.title) : null,
-      e.place ? h('span', { class: 'detail-place' }, '📍 ', e.place) : null,
-      e.body ? h('div', { class: 'detail-paper' }, h('p', { class: 'detail-body' }, e.body)) : null,
-      h('footer', { class: 'detail-meta' },
-        h('span', { class: 'detail-author' },
-          h('span', { class: 'face big' }, e.author ? e.author.avatar : '👤'),
-          h('span', {}, h('strong', {}, e.author ? e.author.displayName : t('deletedUser')),
-            e.editedBy ? h('small', {}, t('editedBy', e.editedBy)) : null)))),
+      h('header', { class: 'detail-head' },
+        h('span', { class: 'detail-sticker', title: t('mood') }, e.mood || j?.emoji || '📔'),
+        h('div', { class: 'detail-heading' },
+          h('h3', { class: 'detail-title' }, e.title || formatShort(e.date)),
+          h('div', { class: 'detail-meta' },
+            h('span', {}, '📅 ', formatLong(e.date)),
+            e.time ? h('span', {}, '🕘 ', e.time) : null,
+            e.place ? h('span', {}, '📍 ', e.place) : null))),
+      // Fixed-size dialog: long text scrolls inside the paper instead of stretching the window.
+      h('div', { class: 'detail-paper' },
+        h('div', { class: 'detail-scroll' },
+          h('p', { class: `detail-body ${e.body ? '' : 'muted'}` }, e.body || t('noBody')))),
+      h('footer', { class: 'detail-by' },
+        h('span', { class: 'face' }, e.author ? e.author.avatar : '👤'),
+        h('strong', {}, e.author ? e.author.displayName : t('deletedUser')),
+        e.editedBy ? h('span', { class: 'muted' }, '· ', t('editedBy', e.editedBy)) : null)),
     footer: [
       h('button', { type: 'button', class: 'btn btn-danger-soft', onclick: () => { close(); deleteEntry(e); } }, '🗑️ ', t('delete')),
       h('span', { class: 'spacer' }),
@@ -794,7 +782,7 @@ function openEditor(entry, date) {
   }, md)));
   drawMoods();
 
-  const v = entry || {};
+  const v = entry ? { ...entry, title: entry.title.slice(0, 60), place: entry.place.slice(0, 80) } : {};
   const body = h('textarea', { name: 'body', rows: 7, maxlength: 20000, placeholder: t('bodyPlaceholder') });
   body.value = v.body || '';
   const autosize = () => { body.style.height = 'auto'; body.style.height = Math.min(body.scrollHeight + 4, window.innerHeight * 0.5) + 'px'; };
@@ -809,9 +797,9 @@ function openEditor(entry, date) {
         h('input', { name: 'time', type: 'time', value: v.time || '' }))),
     h('div', { class: 'field' }, h('span', { class: 'field-label' }, t('mood')), moodPicker),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('title')),
-      h('input', { name: 'title', type: 'text', maxlength: 120, placeholder: t('titlePlaceholder'), value: v.title || '' })),
+      h('input', { name: 'title', type: 'text', maxlength: 60, placeholder: t('titlePlaceholder'), value: v.title || '' })),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('place'), h('small', {}, ` (${t('optional')})`)),
-      h('input', { name: 'place', type: 'text', maxlength: 120, placeholder: t('placePlaceholder'), value: v.place || '' })),
+      h('input', { name: 'place', type: 'text', maxlength: 80, placeholder: t('placePlaceholder'), value: v.place || '' })),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('body')), body),
     err);
 

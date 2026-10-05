@@ -90,6 +90,8 @@ test('personal entries: any year, CRUD, privacy', async () => {
   assert.equal((await ayse('POST', `/api/journals/${personalId}/entries`, { date: '2026-10-05' })).data.error, 'empty_entry');
   assert.equal((await ayse('POST', `/api/journals/${personalId}/entries`, { date: '2026-02-30', title: 'x' })).data.error, 'invalid_date');
   assert.equal((await ayse('POST', `/api/journals/${personalId}/entries`, { date: '2026-02-03', time: '25:00', title: 'x' })).data.error, 'invalid_time');
+  assert.equal((await ayse('POST', `/api/journals/${personalId}/entries`, { date: '2026-02-03', title: 'x'.repeat(61) })).data.error, 'too_long_title');
+  assert.equal((await ayse('POST', `/api/journals/${personalId}/entries`, { date: '2026-02-03', title: 'x', place: 'p'.repeat(81) })).data.error, 'too_long_place');
 
   r = await ayse('GET', '/api/entries?journal=all&from=2026-10-01&to=2026-10-31');
   assert.equal(r.data.entries.length, 1);
