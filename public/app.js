@@ -402,6 +402,8 @@ function renderShell() {
   app.replaceChildren(
     h('div', { class: 'nav-scrim', onclick: closeNav }),
     h('aside', { class: 'sidebar', id: 'sidebar', 'aria-label': t('menu') }),
+    // A tab on the sidebar's edge, always at mid-height, so it never moves while the menu changes.
+    h('button', { type: 'button', class: 'side-toggle', id: 'side-toggle', onclick: toggleSidebar }),
     h('main', { class: 'main' },
       h('header', { class: 'topbar' },
         h('button', { class: 'icon-btn nav-toggle', type: 'button', 'aria-label': t('menu'), onclick: openNav }, '☰'),
@@ -440,6 +442,16 @@ function toggleSidebar() {
   setPanelFlag('side-mini', !panelFlag('side-mini'));
   renderSidebar();
 }
+function renderSideToggle() {
+  const btn = $('#side-toggle');
+  if (!btn) return;
+  const label = panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar');
+  btn.setAttribute('aria-label', label);
+  btn.title = `${label} ( [ )`;
+  if (!btn.firstChild) {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+}
 function toggleWideDay() {
   setPanelFlag('day-wide', !panelFlag('day-wide'));
   renderDay();
@@ -466,12 +478,7 @@ function renderSidebar() {
 
   side.replaceChildren(
     h('div', { class: 'brand-row' },
-      h('div', { class: 'brand' }, h('img', { src: '/icon.svg', alt: '', width: 36, height: 36 }), h('span', {}, 'Günce')),
-      h('button', {
-        type: 'button', class: 'icon-btn small side-toggle', onclick: toggleSidebar,
-        'aria-label': panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar'),
-        title: panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar'),
-      }, panelFlag('side-mini') ? '»' : '«')),
+      h('div', { class: 'brand' }, h('img', { src: '/icon.svg', alt: '', width: 36, height: 36 }), h('span', {}, 'Günce'))),
     h('nav', { class: 'nav' },
       item('all', '🌈', t('allJournals'), 'rainbow'),
       personal ? item(personal.id, personal.emoji, journalName(personal), personal.color, settingsBtn(personal)) : null,
@@ -487,6 +494,7 @@ function renderSidebar() {
         h('span', { class: 'me-text' }, h('strong', {}, u.displayName), h('small', {}, '@' + u.username))),
       h('p', { class: 'hint' }, t('shortcutsHint'))));
 
+  renderSideToggle();
   const top = $('#topbar-avatar');
   if (top) top.textContent = u.avatar;
 }
