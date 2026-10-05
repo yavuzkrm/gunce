@@ -788,7 +788,7 @@ function openEditor(entry, date) {
   const autosize = () => { body.style.height = 'auto'; body.style.height = Math.min(body.scrollHeight + 4, window.innerHeight * 0.5) + 'px'; };
   body.addEventListener('input', autosize);
 
-  const form = h('form', { class: 'editor', novalidate: true },
+  const form = h('form', { class: 'editor', novalidate: true, autocomplete: 'off' },
     state.journals.length > 1 ? h('div', { class: 'field' }, h('span', { class: 'field-label' }, t('journal')), journalPicker) : null,
     h('div', { class: 'field-row' },
       h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('date')),
@@ -797,9 +797,9 @@ function openEditor(entry, date) {
         h('input', { name: 'time', type: 'time', value: v.time || '' }))),
     h('div', { class: 'field' }, h('span', { class: 'field-label' }, t('mood')), moodPicker),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('title')),
-      h('input', { name: 'title', type: 'text', maxlength: 60, placeholder: t('titlePlaceholder'), value: v.title || '' })),
+      h('input', { name: 'title', type: 'text', autocomplete: 'off', maxlength: 60, placeholder: t('titlePlaceholder'), value: v.title || '' })),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('place'), h('small', {}, ` (${t('optional')})`)),
-      h('input', { name: 'place', type: 'text', maxlength: 80, placeholder: t('placePlaceholder'), value: v.place || '' })),
+      h('input', { name: 'place', type: 'text', autocomplete: 'off', maxlength: 80, placeholder: t('placePlaceholder'), value: v.place || '' })),
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, t('body')), body),
     err);
 
@@ -863,11 +863,11 @@ function openJournalModal(journal) {
   drawEmojis(); drawColors(); drawPreview();
 
   const nameInput = h('input', {
-    name: 'name', type: 'text', maxlength: 60, required: !personal,
+    name: 'name', type: 'text', autocomplete: 'off', maxlength: 60, required: !personal,
     placeholder: personal ? t('personalNamePlaceholder') : t('journalNamePlaceholder'), value: journal?.name || '',
   });
 
-  const form = h('form', { class: 'editor', novalidate: true },
+  const form = h('form', { class: 'editor', novalidate: true, autocomplete: 'off' },
     h('div', { class: 'journal-name-row' }, preview,
       h('label', { class: 'field grow' }, h('span', { class: 'field-label' }, t('journalName')), nameInput)),
     h('div', { class: 'field' }, h('span', { class: 'field-label' }, t('icon')), emojiGrid),
