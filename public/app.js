@@ -301,7 +301,7 @@ async function loadJournals() {
 function gridRange(y, m) {
   const first = ymd(y, m, 1);
   const start = addDays(first, -weekdayOf(y, m, 1));
-  const cells = Math.ceil((weekdayOf(y, m, 1) + daysIn(y, m)) / 7) * 7;
+  const cells = 42; // always six weeks, so the grid keeps the same size every month
   return { start, end: addDays(start, cells - 1), cells };
 }
 
@@ -396,6 +396,7 @@ async function enter(user) {
 }
 
 function renderShell() {
+  restorePanelFlags();
   const app = $('#app');
   app.className = 'shell';
   app.replaceChildren(
@@ -407,15 +408,42 @@ function renderShell() {
         h('div', { class: 'brand brand-small' }, h('img', { src: '/icon.svg', alt: '', width: 28, height: 28 }), h('span', {}, 'Günce')),
         h('button', { class: 'avatar-btn', type: 'button', id: 'topbar-avatar', 'aria-label': t('profile'), onclick: openProfile })),
       h('section', { class: 'calendar', id: 'calendar' })),
-    h('div', { class: 'day-scrim', onclick: closeDaySheet }),
+    h('div', { class: 'day-scrim', onclick: () => document.body.classList.remove('day-open') }),
     h('aside', { class: 'day', id: 'day' }),
     h('button', { class: 'fab', type: 'button', 'aria-label': t('addEntry'), onclick: () => openEditor(null, state.selected) }, '+'));
 }
 
 const openNav = () => document.body.classList.add('nav-open');
 const closeNav = () => document.body.classList.remove('nav-open');
-const openDaySheet = () => document.body.classList.add('day-open');
-const closeDaySheet = () => document.body.classList.remove('day-open');
+
+// Desktop panel layout, remembered per browser: a mini sidebar, a hidden day panel or a wide day panel.
+const PANEL_FLAGS = { 'side-mini': 'gunce-side-mini', 'day-hidden': 'gunce-day-hidden', 'day-wide': 'gunce-day-wide' };
+const panelFlag = (cls) => document.body.classList.contains(cls);
+function setPanelFlag(cls, on) {
+  document.body.classList.toggle(cls, on);
+  store.set(PANEL_FLAGS[cls], on ? '1' : '');
+}
+function restorePanelFlags() {
+  for (const [cls, key] of Object.entries(PANEL_FLAGS)) document.body.classList.toggle(cls, store.get(key) === '1');
+}
+const isDrawerLayout = () => matchMedia('(max-width: 1180px)').matches;
+
+function openDaySheet() {
+  document.body.classList.add('day-open');
+  if (panelFlag('day-hidden')) setPanelFlag('day-hidden', false);
+}
+function closeDaySheet() {
+  if (isDrawerLayout()) document.body.classList.remove('day-open');
+  else setPanelFlag('day-hidden', true);
+}
+function toggleSidebar() {
+  setPanelFlag('side-mini', !panelFlag('side-mini'));
+  renderSidebar();
+}
+function toggleWideDay() {
+  setPanelFlag('day-wide', !panelFlag('day-wide'));
+  renderDay();
+}
 
 function renderSidebar() {
   const side = $('#sidebar');
@@ -423,7 +451,7 @@ function renderSidebar() {
   const u = state.user;
   const item = (view, emoji, label, color, extra) =>
     h('div', { class: `nav-item c-${color} ${String(state.view) === String(view) ? 'active' : ''}` },
-      h('button', { type: 'button', class: 'nav-main', onclick: () => setView(view) },
+      h('button', { type: 'button', class: 'nav-main', title: label, onclick: () => setView(view) },
         h('span', { class: 'nav-emoji' }, emoji),
         h('span', { class: 'nav-label' }, label)),
       extra);
@@ -437,7 +465,13 @@ function renderSidebar() {
   const shared = state.journals.filter((j) => j.kind === 'shared');
 
   side.replaceChildren(
-    h('div', { class: 'brand' }, h('img', { src: '/icon.svg', alt: '', width: 36, height: 36 }), h('span', {}, 'Günce')),
+    h('div', { class: 'brand-row' },
+      h('div', { class: 'brand' }, h('img', { src: '/icon.svg', alt: '', width: 36, height: 36 }), h('span', {}, 'Günce')),
+      h('button', {
+        type: 'button', class: 'icon-btn small side-toggle', onclick: toggleSidebar,
+        'aria-label': panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar'),
+        title: panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar'),
+      }, panelFlag('side-mini') ? '»' : '«')),
     h('nav', { class: 'nav' },
       item('all', '🌈', t('allJournals'), 'rainbow'),
       personal ? item(personal.id, personal.emoji, journalName(personal), personal.color, settingsBtn(personal)) : null,
@@ -445,10 +479,10 @@ function renderSidebar() {
         h('span', {}, t('shared')),
         h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('newShared'), title: t('newShared'), onclick: () => openJournalModal(null) }, '+')),
       shared.map((j) => item(j.id, j.emoji, j.name, j.color, [faces(j), settingsBtn(j)])),
-      h('button', { type: 'button', class: 'nav-add', onclick: () => openJournalModal(null) }, h('span', { class: 'nav-emoji' }, '✨'), t('newShared')),
-      h('button', { type: 'button', class: 'nav-add', onclick: () => openJoinModal() }, h('span', { class: 'nav-emoji' }, '🔑'), t('joinWithCode'))),
+      h('button', { type: 'button', class: 'nav-add', title: t('newShared'), onclick: () => openJournalModal(null) }, h('span', { class: 'nav-emoji' }, '✨'), h('span', { class: 'nav-label' }, t('newShared'))),
+      h('button', { type: 'button', class: 'nav-add', title: t('joinWithCode'), onclick: () => openJoinModal() }, h('span', { class: 'nav-emoji' }, '🔑'), h('span', { class: 'nav-label' }, t('joinWithCode')))),
     h('div', { class: 'side-foot' },
-      h('button', { type: 'button', class: 'me', onclick: openProfile },
+      h('button', { type: 'button', class: 'me', title: t('profile'), onclick: openProfile },
         h('span', { class: 'me-avatar' }, u.avatar),
         h('span', { class: 'me-text' }, h('strong', {}, u.displayName), h('small', {}, '@' + u.username))),
       h('p', { class: 'hint' }, t('shortcutsHint'))));
@@ -490,7 +524,7 @@ function renderCalendar() {
     const outside = dm !== m || dy !== y;
     const valid = inRange(dy) && date.length === 10;
     const list = byDate.get(date) || [];
-    const chips = list.slice(0, 3).map((e) => {
+    const chips = list.map((e) => {
       const j = journalById(e.journalId);
       return h('span', { class: `chip c-${j?.color || 'peach'}` },
         h('span', { class: 'chip-mood' }, e.mood || j?.emoji || '•'),
@@ -506,7 +540,7 @@ function renderCalendar() {
       onclick: () => selectDate(date),
     },
       h('span', { class: 'cell-num' }, dd),
-      list.length ? h('span', { class: 'cell-chips' }, chips, list.length > 3 ? h('span', { class: 'more' }, `+${list.length - 3}`) : null) : null,
+      list.length ? h('span', { class: 'cell-chips' }, chips, h('span', { class: 'more', hidden: true })) : null,
       list.length ? h('span', { class: 'cell-dots', 'aria-hidden': 'true' }, list.slice(0, 4).map((e) => h('i', { class: `dot c-${journalById(e.journalId)?.color || 'peach'}` }))) : null));
   }
 
@@ -520,6 +554,7 @@ function renderCalendar() {
           h('span', {}, cap(monthName(m))), ' ', h('span', { class: 'cal-year' }, y), h('span', { class: 'caret' }, '▾'))),
       h('div', { class: 'cal-actions' },
         h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('search'), title: t('search') + ' (/)', onclick: openSearch }, '🔍'),
+        h('button', { type: 'button', class: 'icon-btn day-reopen', 'aria-label': t('showDay'), title: t('showDay'), onclick: openDaySheet }, '📖'),
         h('div', { class: 'seg' },
           h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('prev'), title: t('prev'), onclick: () => goToMonth(y, m - 1), disabled: y === MIN_YEAR && m === 1 }, '‹'),
           h('button', { type: 'button', class: 'btn btn-soft', onclick: () => selectDate(todayStr(), { open: false }) }, t('today')),
@@ -529,7 +564,32 @@ function renderCalendar() {
       stats && stats.entries ? h('span', { class: 'muted total' }, h('span', { class: 'sep' }, ' · '), t('totalSummary', stats.entries, formatShort(stats.first))) : null),
     h('div', { class: 'weekdays', 'aria-hidden': 'true' }, [0, 1, 2, 3, 4, 5, 6].map((i) => h('span', { class: i >= 5 ? 'weekend' : '' }, weekdayName(i, 'short')))),
     grid);
+  fitChips();
+  gridObserver.disconnect();
+  gridObserver.observe(grid);
 }
+
+// Cells have a fixed height, so show as many chips as fit and sum up the rest as "+N".
+function fitChips() {
+  for (const box of document.querySelectorAll('.cell-chips')) {
+    const chips = [...box.querySelectorAll('.chip')];
+    const more = box.querySelector('.more');
+    chips.forEach((c) => { c.hidden = false; });
+    more.hidden = true;
+    let hidden = 0;
+    // The "+N" badge sits in the corner, so only the chips themselves need to fit.
+    for (let i = chips.length - 1; i > 0 && box.scrollHeight > box.clientHeight + 1; i--) {
+      chips[i].hidden = true;
+      more.hidden = false;
+      more.textContent = `+${++hidden}`;
+    }
+  }
+}
+let fitFrame = 0;
+const gridObserver = new ResizeObserver(() => {
+  cancelAnimationFrame(fitFrame);
+  fitFrame = requestAnimationFrame(fitChips);
+});
 
 function openMonthPicker() {
   let year = state.year;
@@ -607,9 +667,13 @@ function renderDay() {
   const [y, m, d] = parse(s);
   const memories = h('div', { class: 'memories' });
 
+  const wide = panelFlag('day-wide');
   day.replaceChildren(
+    h('div', { class: 'day-tools' },
+      h('button', { type: 'button', class: 'btn btn-ghost small day-wide-btn', onclick: toggleWideDay, 'aria-pressed': String(wide) },
+        wide ? '⤡ ' : '⤢ ', wide ? t('shrinkDay') : t('expandDay')),
+      h('button', { type: 'button', class: 'icon-btn small sheet-close', 'aria-label': t('hideDay'), title: t('hideDay'), onclick: closeDaySheet }, '✕')),
     h('div', { class: 'day-head' },
-      h('button', { type: 'button', class: 'icon-btn sheet-close', 'aria-label': t('close'), onclick: closeDaySheet }, '✕'),
       h('div', { class: 'day-date' },
         h('span', { class: 'day-num' }, d),
         h('span', { class: 'day-meta' },
@@ -1028,7 +1092,9 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openEditor(null, state.selected); }
   else if (e.key === '/') { e.preventDefault(); openSearch(); }
   else if (e.key === 't' || e.key === 'T') selectDate(todayStr(), { open: false });
-  else if (e.key === 'Escape') { closeNav(); closeDaySheet(); }
+  else if (e.key === '[') toggleSidebar();
+  else if (e.key === ']') { if (panelFlag('day-hidden')) openDaySheet(); else closeDaySheet(); }
+  else if (e.key === 'Escape') { closeNav(); document.body.classList.remove('day-open'); }
 });
 
 // Friends may be writing in a shared journal at the same time; pick up their changes quietly.

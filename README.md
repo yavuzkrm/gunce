@@ -22,7 +22,8 @@ Everything sits on a monthly calendar. Click a day to read or write. There is no
 
 - **One personal journal per person.** It's created when you sign up and only you can see it.
 - **Unlimited shared journals.** Give one a name, an emoji and a colour, then invite people with an 8-character code or a link (`/join/CODE`). Every member can write, edit and delete entries. The owner can remove members or generate a new code, which stops the old one from working.
-- **Monthly calendar.** Each day shows coloured chips for its memories (dots on phones). The "Everything together" view merges all your journals, coloured by journal.
+- **Monthly calendar that never scrolls.** Every month is drawn as the same six-week grid, sized to fit the screen. Each day shows coloured chips for its memories, as many as fit, plus a "+N" badge for the rest (dots on phones). The "Everything together" view merges all your journals, coloured by journal.
+- **Flexible layout.** The sidebar collapses to an emoji rail, and the day panel can be closed or enlarged into a wide reading view. The app remembers your choice.
 - **Any year from 1 to 9999.** Jump to any month or year from the picker. Dates are handled as plain strings, so 1987 behaves exactly like 2026.
 - **Rich entries.** Each entry has an optional time, a mood emoji, a title, an optional place and free text. Shared entries show who wrote them and who last edited them. Entries can be moved to another journal.
 - **On this day.** The day panel lists what you wrote on the same date in other years.
@@ -30,13 +31,17 @@ Everything sits on a monthly calendar. Click a day to read or write. There is no
 - **JSON backup** of any journal.
 - **Turkish and English**, plus light, dark and automatic themes.
 - **Works on phones.** The calendar collapses to dots and days open as a bottom sheet. You can add it to your home screen (web manifest).
-- **Keyboard shortcuts:** `←` `→` change month, `N` new memory, `/` search, `T` today.
+- **Keyboard shortcuts:** `←` `→` change month, `N` new memory, `/` search, `T` today, `[` toggle sidebar, `]` toggle day panel.
 - **Live-ish sync.** Open tabs quietly refresh every 45 seconds and whenever you come back to the tab, so you see what friends added.
 
 <p align="center">
   <img src="docs/screenshots/shared-journal.png" alt="Shared journal settings with invite code" width="420">
   &nbsp;
   <img src="docs/screenshots/dark.png" alt="Dark theme" width="420">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/wide-day.png" alt="Collapsed sidebar and enlarged day panel" width="860">
 </p>
 
 ## Tech
