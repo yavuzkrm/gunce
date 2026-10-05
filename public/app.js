@@ -412,7 +412,7 @@ function renderShell() {
       h('section', { class: 'calendar', id: 'calendar' })),
     h('div', { class: 'day-scrim', onclick: () => document.body.classList.remove('day-open') }),
     h('aside', { class: 'day', id: 'day' }),
-    // The day panel's tab sits level with the calendar's "Today" controls.
+    // Mirror of the sidebar tab, on the day panel's edge.
     h('button', { type: 'button', class: 'day-toggle', id: 'day-toggle', onclick: toggleDayPanel }),
     h('button', { class: 'fab', type: 'button', 'aria-label': t('addEntry'), onclick: () => openEditor(null, state.selected) }, '+'));
 }
@@ -420,8 +420,8 @@ function renderShell() {
 const openNav = () => document.body.classList.add('nav-open');
 const closeNav = () => document.body.classList.remove('nav-open');
 
-// Desktop panel layout, remembered per browser: a mini sidebar, a hidden day panel or a wide day panel.
-const PANEL_FLAGS = { 'side-mini': 'gunce-side-mini', 'day-hidden': 'gunce-day-hidden', 'day-wide': 'gunce-day-wide' };
+// Desktop panel layout, remembered per browser: a mini sidebar and/or a hidden day panel.
+const PANEL_FLAGS = { 'side-mini': 'gunce-side-mini', 'day-hidden': 'gunce-day-hidden' };
 const panelFlag = (cls) => document.body.classList.contains(cls);
 function setPanelFlag(cls, on) {
   document.body.classList.toggle(cls, on);
@@ -455,12 +455,6 @@ function renderDayToggle() {
   btn.setAttribute('aria-label', label);
   btn.title = `${label} ( ] )`;
   if (!btn.firstChild) btn.innerHTML = CHEVRON_SVG;
-  // Line the tab up with the month navigation ("‹ Today ›").
-  const nav = document.querySelector('.cal-actions .seg');
-  if (nav) {
-    const r = nav.getBoundingClientRect();
-    document.body.style.setProperty('--day-toggle-top', `${Math.round(r.top + r.height / 2 - 32)}px`);
-  }
 }
 function toggleSidebar() {
   setPanelFlag('side-mini', !panelFlag('side-mini'));
@@ -473,10 +467,6 @@ function renderSideToggle() {
   btn.setAttribute('aria-label', label);
   btn.title = `${label} ( [ )`;
   if (!btn.firstChild) btn.innerHTML = CHEVRON_SVG;
-}
-function toggleWideDay() {
-  setPanelFlag('day-wide', !panelFlag('day-wide'));
-  renderDay();
 }
 
 function renderSidebar() {
@@ -618,7 +608,7 @@ function fitChips() {
 let fitFrame = 0;
 const gridObserver = new ResizeObserver(() => {
   cancelAnimationFrame(fitFrame);
-  fitFrame = requestAnimationFrame(() => { fitChips(); renderDayToggle(); });
+  fitFrame = requestAnimationFrame(fitChips);
 });
 
 function openMonthPicker() {
@@ -672,7 +662,12 @@ function entryCard(e, { compact = false } = {}) {
         h('strong', {}, e.title || e.body.slice(0, 80))));
   }
   const by = e.author ? `${e.author.avatar} ${e.author.displayName}` : t('deletedUser');
-  return h('article', { class: `entry c-${j?.color || 'peach'}` },
+  const stop = (fn) => (ev) => { ev.stopPropagation(); fn(); };
+  return h('article', {
+    class: `entry c-${j?.color || 'peach'}`, role: 'button', tabindex: '0', title: t('openEntry'),
+    onclick: () => openEntryDetail(e),
+    onkeydown: (ev) => { if (ev.target === ev.currentTarget && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); openEntryDetail(e); } },
+  },
     h('div', { class: 'entry-top' },
       h('span', { class: 'entry-mood' }, e.mood || j?.emoji || '📔'),
       h('div', { class: 'entry-headline' },
@@ -680,13 +675,38 @@ function entryCard(e, { compact = false } = {}) {
         e.title ? h('h3', {}, e.title) : null,
         e.place ? h('span', { class: 'entry-place' }, '📍 ', e.place) : null),
       h('div', { class: 'entry-actions' },
-        h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('edit'), title: t('edit'), onclick: () => openEditor(e) }, '✏️'),
-        h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('delete'), title: t('delete'), onclick: () => deleteEntry(e) }, '🗑️'))),
-    e.body ? h('p', { class: 'entry-body' }, e.body) : null,
+        h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('edit'), title: t('edit'), onclick: stop(() => openEditor(e)) }, '✏️'),
+        h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('delete'), title: t('delete'), onclick: stop(() => deleteEntry(e)) }, '🗑️'))),
+    e.body ? h('p', { class: 'entry-excerpt' }, e.body) : null,
     h('footer', { class: 'entry-foot' },
       j && (j.kind === 'shared' || showJournal) ? h('span', {}, by) : null,
       e.editedBy ? h('span', { class: 'muted' }, '· ', t('editedBy', e.editedBy)) : null,
       showJournal ? h('span', { class: `tag c-${j.color}` }, j.emoji, ' ', journalName(j)) : null));
+}
+
+function openEntryDetail(e) {
+  const j = journalById(e.journalId);
+  const by = e.author ? `${e.author.avatar} ${e.author.displayName}` : t('deletedUser');
+  const { close } = modal({
+    title: `${formatLong(e.date)}${e.time ? ' · ' + e.time : ''}`,
+    className: `modal-entry c-${j?.color || 'peach'}`,
+    body: h('article', { class: 'entry-detail' },
+      h('div', { class: 'detail-head' },
+        h('span', { class: 'entry-mood' }, e.mood || j?.emoji || '📔'),
+        h('div', { class: 'detail-titles' },
+          e.title ? h('h3', {}, e.title) : null,
+          e.place ? h('span', { class: 'entry-place' }, '📍 ', e.place) : null)),
+      e.body ? h('p', { class: 'detail-body' }, e.body) : null,
+      h('footer', { class: 'entry-foot' },
+        h('span', {}, by),
+        e.editedBy ? h('span', { class: 'muted' }, '· ', t('editedBy', e.editedBy)) : null,
+        j ? h('span', { class: `tag c-${j.color}` }, j.emoji, ' ', journalName(j)) : null)),
+    footer: [
+      h('button', { type: 'button', class: 'btn btn-danger-soft', onclick: () => { close(); deleteEntry(e); } }, '🗑️ ', t('delete')),
+      h('span', { class: 'spacer' }),
+      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => { close(); openEditor(e); } }, '✏️ ', t('edit')),
+    ],
+  });
 }
 
 function renderDay() {
@@ -697,11 +717,9 @@ function renderDay() {
   const [y, m, d] = parse(s);
   const memories = h('div', { class: 'memories' });
 
-  const wide = panelFlag('day-wide');
   day.replaceChildren(
+    // Only shown when the panel is a drawer/sheet; on desktop the edge tab opens and closes it.
     h('div', { class: 'day-tools' },
-      h('button', { type: 'button', class: 'btn btn-ghost small day-wide-btn', onclick: toggleWideDay, 'aria-pressed': String(wide) },
-        wide ? '⤡ ' : '⤢ ', wide ? t('shrinkDay') : t('expandDay')),
       h('button', { type: 'button', class: 'icon-btn small sheet-close', 'aria-label': t('hideDay'), title: t('hideDay'), onclick: closeDaySheet }, '✕')),
     h('div', { class: 'day-head' },
       h('div', { class: 'day-date' },
