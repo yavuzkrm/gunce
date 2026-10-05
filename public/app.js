@@ -412,6 +412,8 @@ function renderShell() {
       h('section', { class: 'calendar', id: 'calendar' })),
     h('div', { class: 'day-scrim', onclick: () => document.body.classList.remove('day-open') }),
     h('aside', { class: 'day', id: 'day' }),
+    // The day panel's tab sits level with the calendar's "Today" controls.
+    h('button', { type: 'button', class: 'day-toggle', id: 'day-toggle', onclick: toggleDayPanel }),
     h('button', { class: 'fab', type: 'button', 'aria-label': t('addEntry'), onclick: () => openEditor(null, state.selected) }, '+'));
 }
 
@@ -433,10 +435,32 @@ const isDrawerLayout = () => matchMedia('(max-width: 1180px)').matches;
 function openDaySheet() {
   document.body.classList.add('day-open');
   if (panelFlag('day-hidden')) setPanelFlag('day-hidden', false);
+  renderDayToggle();
 }
 function closeDaySheet() {
   if (isDrawerLayout()) document.body.classList.remove('day-open');
   else setPanelFlag('day-hidden', true);
+  renderDayToggle();
+}
+function toggleDayPanel() {
+  if (isDrawerLayout() || panelFlag('day-hidden')) openDaySheet();
+  else closeDaySheet();
+}
+const CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function renderDayToggle() {
+  const btn = $('#day-toggle');
+  if (!btn) return;
+  const opens = isDrawerLayout() || panelFlag('day-hidden');
+  const label = opens ? t('showDay') : t('hideDay');
+  btn.setAttribute('aria-label', label);
+  btn.title = `${label} ( ] )`;
+  if (!btn.firstChild) btn.innerHTML = CHEVRON_SVG;
+  // Line the tab up with the month navigation ("‹ Today ›").
+  const nav = document.querySelector('.cal-actions .seg');
+  if (nav) {
+    const r = nav.getBoundingClientRect();
+    document.body.style.setProperty('--day-toggle-top', `${Math.round(r.top + r.height / 2 - 32)}px`);
+  }
 }
 function toggleSidebar() {
   setPanelFlag('side-mini', !panelFlag('side-mini'));
@@ -448,9 +472,7 @@ function renderSideToggle() {
   const label = panelFlag('side-mini') ? t('expandSidebar') : t('collapseSidebar');
   btn.setAttribute('aria-label', label);
   btn.title = `${label} ( [ )`;
-  if (!btn.firstChild) {
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  }
+  if (!btn.firstChild) btn.innerHTML = CHEVRON_SVG;
 }
 function toggleWideDay() {
   setPanelFlag('day-wide', !panelFlag('day-wide'));
@@ -562,7 +584,6 @@ function renderCalendar() {
           h('span', {}, cap(monthName(m))), ' ', h('span', { class: 'cal-year' }, y), h('span', { class: 'caret' }, '▾'))),
       h('div', { class: 'cal-actions' },
         h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('search'), title: t('search') + ' (/)', onclick: openSearch }, '🔍'),
-        h('button', { type: 'button', class: 'icon-btn day-reopen', 'aria-label': t('showDay'), title: t('showDay'), onclick: openDaySheet }, '📖'),
         h('div', { class: 'seg' },
           h('button', { type: 'button', class: 'icon-btn', 'aria-label': t('prev'), title: t('prev'), onclick: () => goToMonth(y, m - 1), disabled: y === MIN_YEAR && m === 1 }, '‹'),
           h('button', { type: 'button', class: 'btn btn-soft', onclick: () => selectDate(todayStr(), { open: false }) }, t('today')),
@@ -573,6 +594,7 @@ function renderCalendar() {
     h('div', { class: 'weekdays', 'aria-hidden': 'true' }, [0, 1, 2, 3, 4, 5, 6].map((i) => h('span', { class: i >= 5 ? 'weekend' : '' }, weekdayName(i, 'short')))),
     grid);
   fitChips();
+  renderDayToggle();
   gridObserver.disconnect();
   gridObserver.observe(grid);
 }
@@ -596,7 +618,7 @@ function fitChips() {
 let fitFrame = 0;
 const gridObserver = new ResizeObserver(() => {
   cancelAnimationFrame(fitFrame);
-  fitFrame = requestAnimationFrame(fitChips);
+  fitFrame = requestAnimationFrame(() => { fitChips(); renderDayToggle(); });
 });
 
 function openMonthPicker() {
@@ -1102,7 +1124,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === '/') { e.preventDefault(); openSearch(); }
   else if (e.key === 't' || e.key === 'T') selectDate(todayStr(), { open: false });
   else if (e.key === '[') toggleSidebar();
-  else if (e.key === ']') { if (panelFlag('day-hidden')) openDaySheet(); else closeDaySheet(); }
+  else if (e.key === ']') toggleDayPanel();
   else if (e.key === 'Escape') { closeNav(); document.body.classList.remove('day-open'); }
 });
 
