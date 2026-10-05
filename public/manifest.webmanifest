@@ -1,0 +1,12 @@
+{
+  "name": "Günce",
+  "short_name": "Günce",
+  "description": "A cozy shared journal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF4EC",
+  "theme_color": "#FFF4EC",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

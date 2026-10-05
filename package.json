@@ -1,0 +1,20 @@
+{
+  "name": "gunce",
+  "version": "1.0.0",
+  "description": "A cozy, shared journal: one personal journal per person, unlimited shared journals with friends, on a monthly calendar with no year limits.",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.2"
+  }
+}
