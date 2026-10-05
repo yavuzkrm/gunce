@@ -262,7 +262,7 @@ body.side-mini .side-toggle svg { transform: rotate(180deg); }
 .day-toggle:hover { color: var(--primary-deep); background: var(--primary-soft); width: 36px; }
 .day-toggle svg { transform: rotate(180deg); transition: transform .15s ease; }
 body.day-hidden .day-toggle svg { transform: none; }
-@media (min-width: 761px) {
+@media (min-width: 901px) {
   body.side-mini .sidebar { padding: 18px 10px 14px; align-items: center; }
   body.side-mini .brand-row { justify-content: center; padding: 0; }
   body.side-mini .brand span,
@@ -270,7 +270,7 @@ body.day-hidden .day-toggle svg { transform: none; }
   body.side-mini .nav-item .faces,
   body.side-mini .nav-gear,
   body.side-mini .nav-section span,
-  body.side-mini .me-text,
+  body.side-mini .me-text { display: none; }
   body.side-mini .nav { width: 100%; align-items: center; }
   body.side-mini .nav-item { padding: 0; justify-content: center; }
   body.side-mini .nav-main { justify-content: center; padding: 6px; flex: none; }
@@ -535,7 +535,7 @@ body.day-hidden .day-toggle svg { transform: none; }
   .day-toggle { right: -1px; }
   .day-toggle svg { transform: none; }
   body.day-open .day-toggle { opacity: 0; pointer-events: none; }
-  .day-tools { display: flex; }
+  .day-tools { display: flex; position: absolute; z-index: 2; top: 14px; right: 14px; margin: 0; }
   .day {
     position: fixed; z-index: 50; top: 0; right: 0; bottom: 0; width: min(430px, 100vw);
     transform: translateX(105%); transition: transform .28s cubic-bezier(.3, .8, .3, 1); box-shadow: var(--shadow);
@@ -552,7 +552,7 @@ body.day-hidden .day-toggle svg { transform: none; }
 }
 
 /* Phone: sidebar becomes a drawer, day panel a bottom sheet, chips become dots. */
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   body { font-size: 15px; }
   .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
   .topbar {
@@ -564,7 +564,7 @@ body.day-hidden .day-toggle svg { transform: none; }
   .avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--primary-soft); font-size: 22px; display: grid; place-items: center; }
   .main { padding: 12px 12px 92px; overflow-y: auto; }
   .side-toggle, .day-toggle { display: none; }
-  .day-tools { margin: 0; }
+  .day-tools { top: 10px; }
   .sidebar {
     position: fixed; z-index: 60; top: 0; left: 0; bottom: 0; width: min(300px, 86vw);
     background: var(--surface); transform: translateX(-105%); transition: transform .28s cubic-bezier(.3, .8, .3, 1); box-shadow: var(--shadow);
@@ -609,4 +609,12 @@ body.day-hidden .day-toggle svg { transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Portrait tablets: phone layout, but cells are wide enough for titles instead of dots. */
+@media (min-width: 601px) and (max-width: 900px) {
+  .cell { align-items: stretch; padding: 6px; border-radius: 16px; }
+  .cell-chips { display: flex; }
+  .cell-dots { display: none; }
+  .grid { min-height: 520px; }
 }

@@ -666,7 +666,7 @@ function entryCard(e, { compact = false } = {}) {
       h('div', { class: 'entry-actions' },
         h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('edit'), title: t('edit'), onclick: stop(() => openEditor(e)) }, '✏️'),
         h('button', { type: 'button', class: 'icon-btn small', 'aria-label': t('delete'), title: t('delete'), onclick: stop(() => deleteEntry(e)) }, '🗑️'))),
-    e.body ? h('p', { class: 'entry-excerpt' }, e.body) : null,
+    e.body ? h('p', { class: 'entry-excerpt' }, e.body.replace(/\n\s*\n+/g, '\n')) : null,
     h('footer', { class: 'entry-foot' },
       j && (j.kind === 'shared' || showJournal) ? h('span', {}, by) : null,
       e.editedBy ? h('span', { class: 'muted' }, '· ', t('editedBy', e.editedBy)) : null,
@@ -1027,6 +1027,8 @@ function openSearch() {
     }, 250);
   });
   const { close } = modal({ title: `🔍 ${t('search')}`, className: 'modal-search', body: [input, results] });
+  // In a search field the browser's first Esc only clears the text; close the dialog straight away instead.
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
   input.focus();
 }
 
