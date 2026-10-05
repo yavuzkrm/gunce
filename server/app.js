@@ -503,7 +503,8 @@ function createApp(db, { secureCookies = false, authRateLimit = 30 } = {}) {
   // ---------- static frontend ----------
 
   const pub = path.join(__dirname, '..', 'public');
-  app.use(express.static(pub, { maxAge: '1h', index: 'index.html' }));
+  // no-cache = always revalidate via ETag, so a new version shows up right after a deploy or restart.
+  app.use(express.static(pub, { index: 'index.html', setHeaders: (res) => res.set('Cache-Control', 'no-cache') }));
   app.get(['/join/:code', '/app'], (req, res) => res.sendFile(path.join(pub, 'index.html')));
 
   // ---------- errors ----------
