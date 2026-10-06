@@ -164,4 +164,4 @@ Photos on entries, reactions and comments, email-based password reset, real-time
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the [MIT License](LICENSE).
